@@ -1,10 +1,11 @@
 import numpy as np
 
+
 def load_images(filename):
     with open(filename, "rb") as file:
-        file.read(16) # skip 16-byte header containing magic number and dims
+        file.read(16)  # skip 16-byte header containing magic number and dims
         raw_pixels = np.frombuffer(file.read(), dtype=np.uint8)
-    
+
     # reshape to 2D array where each row is an image
     images = raw_pixels.reshape(-1, 784)
 
@@ -16,12 +17,14 @@ def load_images(filename):
 
     return normalised_images
 
+
 def load_labels(filename):
     with open(filename, "rb") as file:
-        file.read(8) # skip 8-byte header containing magic number and count
+        file.read(8)  # skip 8-byte header containing magic number and count
         labels = np.frombuffer(file.read(), dtype=np.uint8)
-    
+
     return labels
+
 
 def one_hot_encode(labels, num_classes=10):
     num_samples = labels.shape[0]
@@ -34,6 +37,7 @@ def one_hot_encode(labels, num_classes=10):
 
     return one_hot
 
+
 def init_params(input_size=784, hidden_size=128, output_size=10):
     # He initialisation for hidden layer (var = 2 / fan_in)
     W1 = np.random.randn(hidden_size, input_size) * np.sqrt(2.0 / input_size)
@@ -45,8 +49,11 @@ def init_params(input_size=784, hidden_size=128, output_size=10):
 
     return W1, b1, W2, b2
 
+
 def relu(Z):
+    # zero out any negative values
     return np.maximum(0, Z)
+
 
 def softmax(Z):
     # subtract column max to prevent numerical overflow in exp
@@ -55,6 +62,7 @@ def softmax(Z):
 
     # normalise by column sums so output values form a probability distribution
     return exp_Z / np.sum(exp_Z, axis=0, keepdims=True)
+
 
 def forward_prop(W1, b1, W2, b2, X):
     # hidden layer
@@ -66,6 +74,7 @@ def forward_prop(W1, b1, W2, b2, X):
     A2 = softmax(Z2)
 
     return Z1, A1, Z2, A2
+
 
 def backward_prop(Z1, A1, Z2, A2, W1, W2, X, Y):
     m = X.shape[1]
@@ -82,6 +91,7 @@ def backward_prop(Z1, A1, Z2, A2, W1, W2, X, Y):
 
     return dW1, db1, dW2, db2
 
+
 def update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, learning_rate):
     # gradient descent parameter updates
     W1 = W1 - learning_rate * dW1
@@ -92,15 +102,51 @@ def update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, learning_rate):
 
     return W1, b1, W2, b2
 
+
 def get_predictions(A2):
     # return index of the highest probability class for each sample
     return np.argmax(A2, axis=0)
+
 
 def get_accuracy(predictions, labels):
     # calculate fraction of matching predictions against their true labels
     return np.sum(predictions == labels) / labels.size
 
+
+def gradient_descent(X, Y, labels, iterations=500, learning_rate=0.1):
+    W1, b1, W2, b2 = init_params()
+
+    for i in range(iterations):
+        # forward pass
+        Z1, A1, Z2, A2 = forward_prop(W1, b1, W2, b2, X)
+
+        # backward pass
+        dW1, db1, dW2, db2 = backward_prop(Z1, A1, Z2, A2, W1, W2, X, Y)
+
+        # update weights and biases
+        W1, b1, W2, b2 = update_params(
+            W1, b1, W2, b2, dW1, db1, dW2, db2, learning_rate
+        )
+
+        # print progress every 50 steps
+        if i % 50 == 0:
+            predictions = get_predictions(A2)
+            accuracy = get_accuracy(predictions, labels)
+            print(f"Iteration {i:3d} | Accuracy: {accuracy * 100:.2f}%")
+
+    return W1, b1, W2, b2
+
+
+# load dataset
 train_images = load_images("train-images-idx3-ubyte")
 train_labels = load_labels("train-labels-idx1-ubyte")
 train_labels_encoded = one_hot_encode(train_labels)
-W1, b1, W2, b2 = init_params()
+
+# run training
+W1, b1, W2, b2 = gradient_descent(
+    train_images,
+    train_labels_encoded,
+    train_labels,
+    iterations=500,
+    learning_rate=0.1,
+)
