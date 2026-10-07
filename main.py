@@ -92,6 +92,14 @@ def update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, learning_rate):
 
     return W1, b1, W2, b2
 
+def get_predictions(A2):
+    # return index of the highest probability class for each sample
+    return np.argmax(A2, axis=0)
+
+def get_accuracy(predictions, labels):
+    # calculate fraction of matching predictions against their true labels
+    return np.sum(predictions == labels) / labels.size
+
 train_images = load_images("train-images-idx3-ubyte")
 train_labels = load_labels("train-labels-idx1-ubyte")
 train_labels_encoded = one_hot_encode(train_labels)
