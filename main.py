@@ -2,23 +2,23 @@ import numpy as np
 
 def load_images(filename):
     with open(filename, "rb") as file:
-        file.read(16) # discard the 16-byte metadata header
+        file.read(16) # skip 16-byte header containing magic number and dims
         raw_pixels = np.frombuffer(file.read(), dtype=np.uint8)
     
-    # reshape into 2d grid: (num_images, 784_pixels_per_image)
+    # reshape to 2D array where each row is an image
     images = raw_pixels.reshape(-1, 784)
 
-    # transpose so each column is one image: (784, num_images)
+    # transpose so images are stored as columns: shape (784, num_samples)
     images_transposed = images.T
 
-    # scale pixel values from [0, 255] down to [0.0, 1.0]
+    # normalise pixel values to range [0.0, 1.0]
     normalised_images = images_transposed / 255.0
 
     return normalised_images
 
 def load_labels(filename):
     with open(filename, "rb") as file:
-        file.read(8) # discard the 8-byte metadata header
+        file.read(8) # skip 8-byte header containing magic number and count
         labels = np.frombuffer(file.read(), dtype=np.uint8)
     
     return labels
@@ -26,13 +26,26 @@ def load_labels(filename):
 def one_hot_encode(labels, num_classes=10):
     num_samples = labels.shape[0]
 
-    # create a grid of all zeros: shape (10, num_samples)
+    # initialise target matrix with zeros
     one_hot = np.zeros((num_classes, num_samples))
 
-    # place a 1.0 at row `label` for each column (sample index)
+    # set the row corresponding to the label to 1.0 for each column
     one_hot[labels, np.arange(num_samples)] = 1.0
 
     return one_hot
 
+def init_params(input_size=784, hidden_size=128, output_size=10):
+    # He initialisation for hidden layer (var = 2 / fan_in)
+    W1 = np.random.randn(hidden_size, input_size) * np.sqrt(2.0 / input_size)
+    b1 = np.zeros((hidden_size, 1))
+
+    # He initialisation for output layer
+    W2 = np.random.randn(output_size, hidden_size) * np.sqrt(2.0 / hidden_size)
+    b2 = np.zeros((output_size, 1))
+
+    return W1, b1, W2, b2
+
 train_images = load_images("train-images-idx3-ubyte")
 train_labels = load_labels("train-labels-idx1-ubyte")
+train_labels_encoded = one_hot_encode(train_labels)
+W1, b1, W2, b2 = init_params()
