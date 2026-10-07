@@ -132,15 +132,28 @@ def gradient_descent(X, Y, labels, iterations=500, learning_rate=0.1):
         if i % 50 == 0:
             predictions = get_predictions(A2)
             accuracy = get_accuracy(predictions, labels)
-            print(f"Iteration {i:3d} | Accuracy: {accuracy * 100:.2f}%")
+            print(f"Training Iteration {i:3d} | Accuracy: {accuracy * 100:.2f}%")
 
     return W1, b1, W2, b2
+
+
+def evaluate(X_test, labels_test, W1, b1, W2, b2):
+    # run forward pass on unseen test split
+    _, _, _, A2 = forward_prop(W1, b1, W2, b2, X_test)
+    predictions = get_predictions(A2)
+    accuracy = get_accuracy(predictions, labels_test)
+
+    print(f"Test Accuracy: {accuracy * 100:.2f}%")
+    return accuracy
 
 
 # load dataset
 train_images = load_images("train-images-idx3-ubyte")
 train_labels = load_labels("train-labels-idx1-ubyte")
 train_labels_encoded = one_hot_encode(train_labels)
+
+test_images = load_images("t10k-images-idx3-ubyte")
+test_labels = load_labels("t10k-labels-idx1-ubyte")
 
 # run training
 W1, b1, W2, b2 = gradient_descent(
@@ -150,3 +163,5 @@ W1, b1, W2, b2 = gradient_descent(
     iterations=500,
     learning_rate=0.1,
 )
+
+evaluate(test_images, test_labels, W1, b1, W2, b2)
