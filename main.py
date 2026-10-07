@@ -16,6 +16,12 @@ def load_images(filename):
 
     return normalised_images
 
+def load_labels(filename):
+    with open(filename, "rb") as file:
+        file.read(8) # discard the 8-byte metadata header
+        labels = np.frombuffer(file.read(), dtype=np.uint8)
+    
+    return labels
+
 train_images = load_images("train-images-idx3-ubyte")
-print("Shape:", train_images.shape)
-print("Pixel range:", train_images.min(), "to", train_images.max())
+train_labels = load_labels("train-labels-idx1-ubyte")
