@@ -45,6 +45,17 @@ def init_params(input_size=784, hidden_size=128, output_size=10):
 
     return W1, b1, W2, b2
 
+def relu(Z):
+    return np.maximum(0, Z)
+
+def softmax(Z):
+    # subtract column max to prevent numerical overflow in exp
+    shifted_Z = Z - np.max(Z, axis=0, keepdims=True)
+    exp_Z = np.exp(shifted_Z)
+
+    # normalise by column sums so output values form a probability distribution
+    return exp_Z / np.sum(exp_Z, axis=0, keepdims=True)
+
 train_images = load_images("train-images-idx3-ubyte")
 train_labels = load_labels("train-labels-idx1-ubyte")
 train_labels_encoded = one_hot_encode(train_labels)
