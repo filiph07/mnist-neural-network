@@ -56,6 +56,32 @@ def softmax(Z):
     # normalise by column sums so output values form a probability distribution
     return exp_Z / np.sum(exp_Z, axis=0, keepdims=True)
 
+def forward_prop(W1, b1, W2, b2, X):
+    # hidden layer
+    Z1 = np.dot(W1, X) + b1
+    A1 = relu(Z1)
+
+    # output layer
+    Z2 = np.dot(W2, A1) + b2
+    A2 = softmax(Z2)
+
+    return Z1, A1, Z2, A2
+
+def backward_prop(Z1, A1, Z2, A2, W1, W2, X, Y):
+    m = X.shape[1]
+
+    # output layer gradient: derivative of cross-entropy with softmax
+    dZ2 = A2 - Y
+    dW2 = np.dot(dZ2, A1.T) / m
+    db2 = np.sum(dZ2, axis=1, keepdims=True) / m
+
+    # backpropagate error through weights and apply relu derivative
+    dZ1 = np.dot(W2.T, dZ2) * (Z1 > 0)
+    dW1 = np.dot(dZ1, X.T) / m
+    db1 = np.sum(dZ1, axis=1, keepdims=True) / m
+
+    return dW1, db1, dW2, db2
+
 train_images = load_images("train-images-idx3-ubyte")
 train_labels = load_labels("train-labels-idx1-ubyte")
 train_labels_encoded = one_hot_encode(train_labels)
